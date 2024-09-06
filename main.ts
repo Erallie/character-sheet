@@ -1,5 +1,5 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { SheetView } from 'src/sheet';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, WorkspaceLeaf } from 'obsidian';
+import { SheetView, VIEW_TYPE_SHEET } from 'src/sheet';
 
 // Remember to rename these classes and interfaces!
 
@@ -17,12 +17,13 @@ export default class CharacterSheet extends Plugin {
     async onload() {
         await this.loadSettings();
 
-        this.registerView('sheet-view', (leaf) => new SheetView(leaf, this, this.app))
+        this.registerView(VIEW_TYPE_SHEET, (leaf) => new SheetView(leaf, this, this.app))
 
         // This creates an icon in the left ribbon.
         const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
             // Called when the user clicks the icon.
-            new Notice('This is a notice!');
+            // new Notice('This is a notice!');
+            this.activateView();
         });
         // Perform additional things with the ribbon
         ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -91,6 +92,17 @@ export default class CharacterSheet extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    async activateView() {
+        const { workspace } = this.app;
+
+        let leaf: WorkspaceLeaf | null;
+
+        leaf = workspace.getLeaf(false);
+        await leaf?.setViewState({ type: VIEW_TYPE_SHEET, active: true });
+        // "Reveal" the leaf in case it is in a collapsed sidebar
+        workspace.revealLeaf(leaf!);
     }
 }
 
